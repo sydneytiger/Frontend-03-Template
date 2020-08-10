@@ -14,12 +14,18 @@ const EOF = Symbol('EOF');
     name: 'class',
     value: 'title'
   }
+
+  text object sample
+  {
+    type: 'text',
+    content: ''
+  }
 */
 let currentToken = null, currentAttribute = null, currentTextNode = null;
 let stack = [{type: 'document', children:[]}];
 
 // 创建 DOM 树的逻辑都在 emit 的方法里
-// 此处做 HTML 词法分析
+// 此处做 HTML 语法分析
 /*
   sample element object
   {
@@ -52,6 +58,7 @@ function emit(token) {
       parent: top
     };
 
+    // build attributes
     for(let prop in token) {
       if(prop !== 'type' && prop !== 'tagName') {
         element.attributes.push({
@@ -63,6 +70,7 @@ function emit(token) {
 
     top.children.push(element);
 
+    // self closing tag不会有 children 元素 所以不需要入栈
     if(!token.isSelfClosing){
       stack.push(element);
     }
