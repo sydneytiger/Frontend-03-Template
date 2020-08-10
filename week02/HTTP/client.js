@@ -61,13 +61,13 @@ class Request {
           host: this.host,
           port: this.port
         }, () => {
-          logger('sending request', this.toString());
+          // logger('sending request', this.toString());
           connection.write(this.toString());
         });
       }
 
       connection.on('data', data => {
-        logger('recevided response', data.toString());
+        // logger('recevided partail response', data.toString());
         parser.receive(data.toString());
         if(parser.isFinished) {
           resolve(parser.response);
@@ -111,6 +111,7 @@ class ResponseParser {
   }
 
   get isFinished(){
+    // logger('bodyParser', this.bodyParser);
     return this.bodyParser && this.bodyParser.isFinished;
   }
 
@@ -209,8 +210,9 @@ class TrunkedBodyParser {
         this.length += parseInt(char, 16);
       }
     } else if(this.current === this.WAITING_LENGTH_LINE_END) {
-      if(char === '\n') {
-        this.current = this.READING_TRUCNK;
+        if(char === '\n') {
+          this.current = this.READING_TRUCNK;
+        }
       } else if(this.current === this.READING_TRUCNK) {
         this.content.push(char);
         this.length --;
@@ -228,7 +230,6 @@ class TrunkedBodyParser {
       }
     }
   }
-}
 
 void async function(){
   let request = new Request({
@@ -246,7 +247,7 @@ void async function(){
 
   let response = await request.send();
 
-  console.log('response', response);
+  logger('received response', response);
 }();
 
 const logger = (title = 'debugger', data) => {
