@@ -1,4 +1,5 @@
 const {logger} = require('./utils.js');
+const css = require('css');
 const EOF = Symbol('EOF');
 
 /*
@@ -45,8 +46,6 @@ let stack = [{type: 'document', children:[]}];
   5. 解析完毕后栈内应该只有一个根元素 document
 */
 function emit(token) {
-  if(token.type === 'text') return;
-
   let top = stack[stack.length - 1];
 
   if(token.type === 'startTag') {
@@ -60,7 +59,7 @@ function emit(token) {
 
     // build attributes
     for(let prop in token) {
-      if(prop !== 'type' && prop !== 'tagName') {
+      if(prop !== 'type' && prop !== 'tagName' && prop != 'isSelfClosing') {
         element.attributes.push({
           name: prop,
           value: token[prop]
@@ -80,6 +79,10 @@ function emit(token) {
     if(top.tagName != token.tagName) {
       throw new Error('Start tag does not match end tag');
     } else {
+      // 遇到<style>标签时 执行 css 规则操作
+      if(top.tagName === 'style'){
+        addCSSRules(top.children[0].content);
+      }
       stack.pop();
     }
 
@@ -96,6 +99,13 @@ function emit(token) {
     currentTextNode.content += token.content;
   }
 
+}
+
+let rules = [];
+function addCSSRules(text) {
+  var ast = css.parse(text);
+  logger('css rules', JSON.stringify(ast, null, '    '));
+  rules.push(...ast.stylesheet.rules);
 }
 
 /*

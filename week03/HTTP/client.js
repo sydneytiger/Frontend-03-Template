@@ -152,7 +152,7 @@ class ResponseParser {
         // Transfer ecnodeing 可以有很多值 node 默认是 chunked
         // 这里开始转入 body 解析
         if(this.headers['Transfer-Encoding'] === 'chunked')
-          this.bodyParser = new CrunkedBodyParser();
+          this.bodyParser = new TrunkedBodyParser();
       } else {
         this.headerName += char;
       }
@@ -184,7 +184,7 @@ class ResponseParser {
 }
 
 // 当读取到 \r 就转换成 WAITING_LENGTH_LINE_END 并等待 \n
-class CrunkedBodyParser {
+class TrunkedBodyParser {
   constructor() {
     this.WAITING_LENGTH = 0;
     this.WAITING_LENGTH_LINE_END = 1;
@@ -248,5 +248,5 @@ void async function(){
 
   const response = await request.send();
   const dom = parser.parseHTML(response.body);
-  logger('DOM tree object', dom);
+    logger('DOM tree object', dom);
 }();
