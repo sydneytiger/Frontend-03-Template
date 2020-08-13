@@ -248,5 +248,5 @@ void async function(){
 
   const response = await request.send();
   const dom = parser.parseHTML(response.body);
-    logger('DOM tree object', dom);
+  // logger('DOM tree object', dom);
 }();

@@ -1,5 +1,5 @@
 const {logger} = require('./utils.js');
-const css = require('css');
+const css = require('css'); // css parser 将string 转成 css rule objects
 const EOF = Symbol('EOF');
 
 /*
@@ -67,6 +67,9 @@ function emit(token) {
       }
     }
 
+    // 在 start tag 里吧 css rule 加上
+    // 重点在调用 computeCSS 的时间点
+    computeCSS(element);
     top.children.push(element);
 
     // self closing tag不会有 children 元素 所以不需要入栈
@@ -101,11 +104,150 @@ function emit(token) {
 
 }
 
+/*
+  一条完整的 css block 就是一条 rule 映射到 css rule object 里
+  body div #myid{
+    width:100px;
+    background-color: #ff5000;
+  }
+  转换成
+  {
+    type: 'rule',
+    selectors: ['body div #myid'],
+    declarations: [{
+      type: 'declaration',
+      property: 'width',
+      value: '100px',
+      parent: omit...,
+      position: omit...
+    }, 
+    {
+      type: 'declaration',
+      property: 'background-color',
+      value: '#ff5000',
+      parent: omit...,
+      position: omit...
+    }]
+  }
+
+*/
+// 全局数组保存收集的 css rules
 let rules = [];
 function addCSSRules(text) {
   var ast = css.parse(text);
-  logger('css rules', JSON.stringify(ast, null, '    '));
+  // logger('css rules', JSON.stringify(ast, null, 2));
+  ast.stylesheet.rules.map(rule => rule.specificity = computeSpecificity(rule.selectors[0]))
   rules.push(...ast.stylesheet.rules);
+}
+
+
+/*
+  CSS specificity 算法逻辑
+  [0, 0, 0, 0] => [inline style, id, class, tag]
+  
+*/
+function computeSpecificity(cssSelector) {
+  const spec = [0, 0, 0, 0];
+  const selectors = cssSelector.split(' ');
+  for(let selector of selectors){
+    if(selector.charAt(0) === '#') {
+      spec[1] += 1;
+    } else if(selector.charAt(0) === '.') {
+      spec[2] += 1;
+    } else {
+      spec[3] += 1;
+    }
+  }
+
+  return spec;
+}
+
+function compareSpecificity(rule1, rule2) {
+  const spec1 = rule1.specificity; 
+  const spec2 = rule2.specificity;
+  if(spec1[0] || spec2[0]) return spec1[0] - spec2[0];
+  if(spec1[1] || spec2[1]) return spec1[1] - spec2[1];
+  if(spec1[2] || spec2[2]) return spec1[2] - spec2[2];
+
+  return spec1[3] - spec2[3];
+}
+
+/*
+  在 computeCSS 函数中 我们必须知道元素的所有父元素才能判断元素和css rule 是否匹配
+  首先获取的是当前元素 所以获得和计算父元素的顺序是从内向外
+  我们从 stack 中可以获取本元素的所有父元素
+
+  e.g. div div #myid (匹配顺序: #myid -> div -> div)
+*/
+function computeCSS(element) {
+  // 获取父元素
+  // stack会随时变化
+  // array.slice()复制成新数组 reverse 
+  let elements = stack.slice().reverse();
+
+  element.computedSytle = element.computedSytle || {};
+  rules.sort((rule1, rule2) => compareSpecificity(rule1, rule2));
+  for(let rule of rules){
+    var selectorParts = rule.selectors[0].split(' ').reverse();
+    // selectorParts = ['#myid', 'div', 'div'];
+
+    if(!match(element, selectorParts[0])) continue;
+
+    let matched = false;
+    let j = 1;
+
+    for(let i = 0; i < elements.length; i++){
+      if(match(elements[i], selectorParts[j])) { //注意 i, j
+        j++;
+      }
+    }
+
+    matched = j >= selectorParts.length;
+
+    if(matched){
+      // 匹配成功 吧 css rule 中的 declaration 属性应用到元素上
+      // console.log(`Element ${element.tagName} matched css rule ${rule.selectors}`);
+      for(let declaration of rule.declarations) {
+        const { property, value } = declaration;
+        element.computedSytle[property] = element.computedSytle[property] || {};
+        element.computedSytle[property].value = value;
+      }
+      // console.log(element.computedSytle);
+    }
+
+
+  }
+}
+
+function match(element, cssSelector) {
+  if(!cssSelector || !element.attributes) return false;
+
+  const startWith = cssSelector[0];
+  const {attributes, tagName}  = element;
+
+  // match id e.g. #myid
+  if(startWith === '#') {
+    const foundId = attributes.filter(attr => attr.name === 'id')[0];
+    if(foundId && foundId.value === cssSelector.replace('#', ''))
+      return true;
+  }
+
+  // match class e.g. .title
+  if(startWith === '.') {
+    const className = cssSelector.replace('.', '');
+    let classAttribute = attributes.filter(attr => attr.name === 'class')[0];
+    if(classAttribute){
+      classAttribute = classAttribute.value.split(' ');
+      return classAttribute.includes(className)
+    }
+  }
+
+  // match tag name;
+  if(tagName === cssSelector) {
+    return true;
+  }
+
+  return false;
 }
 
 /*
