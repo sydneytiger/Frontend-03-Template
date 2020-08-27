@@ -1,15 +1,18 @@
 <html maaa='a'>
   <head>
     <style>
-      body div #myid{
-        width:100px;
-        background-color: #ff5000;
-
+      #container {
+        width: 500px;
+        height: 300px;
+        display: flex;
       }
-      body div img{
-        width:50px;
-        height: 200px;
-        background-color: #eee;
+
+      #container #myid {
+        width: 200px;
+      }
+
+      #container .c1 {
+        flex: 1;
       }
 
       .title {
@@ -18,10 +21,10 @@
     </style>
   </head>
   <body>
-    <div class="title margin-left-xs">
-      <img id="myid" />
-      <img style="display:none" />
-      <p>Testing</p>
+    <div id="container">
+      <div id="myid">my id</div>
+      <div class="c1"> C 1 </div>
+      <p class="title">Testing</p>
     </div>
   </body>
 </html>

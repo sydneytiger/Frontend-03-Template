@@ -232,7 +232,7 @@ class TrunkedBodyParser {
     }
 }
 
-void async function(){
+void async function() {
   let request = new Request({
     method: "POST",
     host: "127.0.0.1",
@@ -248,5 +248,21 @@ void async function(){
 
   const response = await request.send();
   const dom = parser.parseHTML(response.body);
-  // logger('DOM tree object', dom);
+  logger('DOM tree object', dom);
 }();
+
+
+/*
+  async a iife
+
+  approach 1 ES6:
+  (async () => {
+    await xxx
+  })();
+
+  approach 2 ES5:
+  void async function() {
+    await xxx
+  }();
+
+*/

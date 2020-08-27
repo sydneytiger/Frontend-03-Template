@@ -23,7 +23,6 @@
   0                                                 ==> 又是一个十六进制数字 直到整个数字是0 表示body 结束
 */
 const net = require('net');
-const { CLIENT_RENEG_WINDOW } = require('tls');
 
 class Request {
   constructor(options){
