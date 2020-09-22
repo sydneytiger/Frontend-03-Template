@@ -25,6 +25,7 @@
 const net = require('net');
 const parser = require('./parser.js');
 const {logger} = require('./utils.js');
+const images = require('images');
 
 class Request {
   constructor(options){
@@ -248,6 +249,8 @@ void async function() {
 
   const response = await request.send();
   const dom = parser.parseHTML(response.body);
+
+  let viewPort = images(800, 600);
   logger('DOM tree object', dom);
 }();
 

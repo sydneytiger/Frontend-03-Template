@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+    	box-sizing: border-box;
+    }
+    .container {
+    	height: 300px;
+      width: 600px;
+      display: flex;
+      border: 1px solid black;
+    }
+    
+    .btn {
+    	flex: 1;
+      cursor: pointer;
+      align-self: center;
+      text-align: center;
+    }
+    
+    .tiles-container {
+      width: 400px;
+      height: 100%;
+    	overflow-x: hidden;
+      flex: 6;
+
+      display: flex;
+    }
+    
+    .tile {
+    	width: 150px;
+      text-align: center;
+      background-color: dodgerblue;
+      color: white;
+      margin-right: 2px;
+      flex-shrink: 0;
+      transition-property: margin-left;
+  		transition-duration: .5s;
+    }
+
+    .tile:first-child {
+      --mleft: 0px;
+      margin-left: var(--mleft);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="btn prev">
+      <button data-prev>Prev</button>
+    </div>
+    
+    <div class="tiles-container">
+      <div class="tile">tile 0</div> 
+      <div class="tile">tile 1</div> 
+      <div class="tile">tile 2</div> 
+      <div class="tile">tile 3</div> 
+      <div class="tile">tile 4</div>
+      <div class="tile">tile 5</div> 
+      <div class="tile">tile 7</div> 
+      <div class="tile">tile 8</div> 
+      <div class="tile">tile 9</div> 
+    </div> 
+
+    <div class="btn next">
+      <button data-next>Next</button>
+    </div> 
+  </div>
+
+  <ul>
+    <li>overflow-x</li>
+    <li>flex-shrink</li>
+    <li>margin</li>
+    <li>css box and position are the keys</li>
+  </ul>
+</body>
+</html>
+<script>
+  const btnNext = document.querySelector('[data-next]');
+  const btnPrev = document.querySelector('[data-prev]');
+  const firstTile = document.querySelector('.tile:first-child');
+  const tilesCount = document.querySelectorAll('.tile').length;
+  let margin = 0;
+
+  const moveToRight = () => {
+    if(margin === 0) return;
+    margin += 152;
+    firstTile.style.setProperty('--mleft', `${margin}px`);
+  };
+
+  const moveToLeft = () => {
+    if(margin === (tilesCount - 3) * 152 * -1) return;
+    margin -= 152;
+    firstTile.style.setProperty('--mleft', `${margin}px`);
+  };
+
+  btnNext.addEventListener('click', moveToLeft);
+
+  btnPrev.addEventListener('click', moveToRight);
+
+</script>
